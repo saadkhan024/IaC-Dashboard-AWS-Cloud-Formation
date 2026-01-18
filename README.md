@@ -2,8 +2,7 @@
 
 A full-stack web application for managing AWS infrastructure through CloudFormation with a single click.
 
-![Dashboard Preview]
-(./assets/dashboard-preview.png)<img width="2048" height="2048" alt="IaC_dashboard-1" src="https://github.com/user-attachments/assets/08efb92d-819c-482c-b9d8-77efec7ca62e" />
+<img width="2048" height="2048" alt="IaC_dashboard-1" src="https://github.com/user-attachments/assets/08efb92d-819c-482c-b9d8-77efec7ca62e" />
 
 
 ## 🎯 Overview
