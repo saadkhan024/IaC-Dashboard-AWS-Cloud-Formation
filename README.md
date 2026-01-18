@@ -2,14 +2,15 @@
 
 A full-stack web application for managing AWS infrastructure through CloudFormation with a single click.
 
-![Dashboard Preview](./assets/dashboard-preview.png)<img width="2048" height="2048" alt="IaC_dashboard-1" src="https://github.com/user-attachments/assets/08efb92d-819c-482c-b9d8-77efec7ca62e" />
+![Dashboard Preview]
+(./assets/dashboard-preview.png)<img width="2048" height="2048" alt="IaC_dashboard-1" src="https://github.com/user-attachments/assets/08efb92d-819c-482c-b9d8-77efec7ca62e" />
 
 
 ## 🎯 Overview
 
 This dashboard allows you to create, manage, and delete AWS resources (EC2, S3, Lambda, RDS) using AWS CloudFormation. Features both demo mode for testing and production mode for real infrastructure deployment.
 
-**Live Demo:** http://your-dashboard-url
+**Live Demo:** http://Your_Public_IP
 
 ---<img width="1893" height="908" alt="iac-dashboard" src="https://github.com/user-attachments/assets/1452ba3e-5ea7-409a-abc5-0b19a9f0ec61" />
 
