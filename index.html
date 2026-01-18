@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS CloudFormation Control Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Sora:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --aws-orange: #ff9900;
+            --terminal-green: #00ff41;
+            --bg-deep: #0d1117;
+            --bg-card: #161b22;
+            --text-primary: #e6edf3;
+            --text-muted: #8b949e;
+            --border-dim: #30363d;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--aws-orange), var(--terminal-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--terminal-green);
+            border-radius: 50px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--terminal-green);
+            margin-top: 1rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--terminal-green);
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border-left: 4px solid var(--aws-orange);
+        }
+
+        .stat-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .panel-title {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--aws-orange);
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            padding: 1rem;
+            border: 2px solid var(--border-dim);
+            border-radius: 12px;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Sora', sans-serif;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            border-color: var(--aws-orange);
+        }
+
+        .btn.create {
+            border-color: var(--terminal-green);
+            color: var(--terminal-green);
+        }
+
+        .btn.create:hover {
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .btn.delete {
+            border-color: #ff3366;
+            color: #ff3366;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .service-btn {
+            padding: 1rem;
+            border: 2px solid var(--border-dim);
+            border-radius: 12px;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .service-btn:hover,
+        .service-btn.selected {
+            border-color: var(--terminal-green);
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--terminal-green);
+        }
+
+        .log-container {
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            background: var(--bg-deep);
+            border-radius: 6px;
+            border-left: 3px solid var(--terminal-green);
+        }
+
+        .log-entry.error {
+            border-left-color: #ff3366;
+        }
+
+        .log-timestamp {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            margin-bottom: 1rem;
+        }
+
+        .stack-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .stack-item {
+            padding: 1rem;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+        }
+
+        .stack-name {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stack-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: 'IBM Plex Mono', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ AWS CloudFormation Control Hub</h1>
+            <div class="status">
+                <span class="status-dot"></span>
+                <span id="modeStatus">Loading...</span>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">EC2 Instances</div>
+                <div class="stat-value" id="ec2Count">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">S3 Buckets</div>
+                <div class="stat-value" id="s3Count">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Lambda Functions</div>
+                <div class="stat-value" id="lambdaCount">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">RDS Databases</div>
+                <div class="stat-value" id="rdsCount">-</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">🚀 Deploy Infrastructure</div>
+            
+            <div class="service-grid">
+                <div class="service-btn selected" data-service="ec2">💻 EC2</div>
+                <div class="service-btn" data-service="s3">🗄️ S3</div>
+                <div class="service-btn" data-service="lambda">⚡ Lambda</div>
+                <div class="service-btn" data-service="rds">🗃️ RDS</div>
+            </div>
+
+            <input type="text" id="stackNameInput" placeholder="Stack name (optional - auto-generated if empty)">
+
+            <div class="action-grid">
+                <button class="btn create" onclick="createStack()">➕ Create Stack</button>
+                <button class="btn" onclick="viewStacks()">📊 View Stacks</button>
+                <button class="btn delete" onclick="deleteLastStack()">🗑️ Delete Last Stack</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">📚 Active Stacks</div>
+            <div class="stack-list" id="stackList">
+                <p style="color: var(--text-muted);">Loading stacks...</p>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">📝 Activity Log</div>
+            <div class="log-container" id="activityLog">
+                <p style="color: var(--text-muted);">Loading logs...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedService = 'ec2';
+        const API_BASE = window.location.origin;
+
+        // Service selection
+        document.querySelectorAll('.service-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.service-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedService = btn.dataset.service;
+            });
+        });
+
+        // Load initial data
+        async function loadData() {
+            try {
+                // Check health and mode
+                const health = await fetch(`${API_BASE}/api/health`).then(r => r.json());
+                document.getElementById('modeStatus').textContent = 
+                    health.demo_mode ? '🎮 DEMO MODE' : '🚀 PRODUCTION MODE';
+
+                // Load metrics
+                const metrics = await fetch(`${API_BASE}/api/metrics`).then(r => r.json());
+                document.getElementById('ec2Count').textContent = metrics.ec2 || 0;
+                document.getElementById('s3Count').textContent = metrics.s3 || 0;
+                document.getElementById('lambdaCount').textContent = metrics.lambda || 0;
+                document.getElementById('rdsCount').textContent = metrics.rds || 0;
+
+                // Load stacks
+                const stacks = await fetch(`${API_BASE}/api/stacks`).then(r => r.json());
+                displayStacks(stacks.stacks || []);
+
+                // Load logs
+                const logs = await fetch(`${API_BASE}/api/logs`).then(r => r.json());
+                displayLogs(logs.logs || []);
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('modeStatus').textContent = '❌ ERROR';
+            }
+        }
+
+        function displayStacks(stacks) {
+            const container = document.getElementById('stackList');
+            if (stacks.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted);">No active stacks</p>';
+                return;
+            }
+            container.innerHTML = stacks.map(stack => `
+                <div class="stack-item">
+                    <div class="stack-name">${stack.StackName || stack.stackName || 'Unnamed'}</div>
+                    <div class="stack-meta">
+                        ${stack.ServiceType || stack.serviceType || 'Unknown'} | 
+                        ${stack.Status || stack.status || 'Unknown'} |
+                        ${new Date(stack.CreationTime || stack.creationTime).toLocaleString()}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayLogs(logs) {
+            const container = document.getElementById('activityLog');
+            if (logs.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted);">No activity logs</p>';
+                return;
+            }
+            container.innerHTML = logs.reverse().map(log => `
+                <div class="log-entry ${log.type}">
+                    <div class="log-timestamp">${new Date(log.timestamp).toLocaleString()}</div>
+                    <div>${log.message}</div>
+                </div>
+            `).join('');
+        }
+
+        async function createStack() {
+            const stackName = document.getElementById('stackNameInput').value || 
+                             `${selectedService}-stack-${Date.now()}`;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/stacks/create`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        stackName: stackName,
+                        serviceType: selectedService
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(`✅ Success!\n\n${result.message}\n\nStack ID: ${result.stack_id || 'N/A'}`);
+                    document.getElementById('stackNameInput').value = '';
+                    setTimeout(loadData, 2000); // Reload data after 2 seconds
+                } else {
+                    alert(`❌ Error: ${result.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                alert(`❌ Error: ${error.message}`);
+            }
+        }
+
+        async function viewStacks() {
+            await loadData();
+            alert('✅ Stacks refreshed! Check the Active Stacks panel.');
+        }
+
+        async function deleteLastStack() {
+            const stacks = await fetch(`${API_BASE}/api/stacks`).then(r => r.json());
+            if (stacks.stacks && stacks.stacks.length > 0) {
+                const lastStack = stacks.stacks[stacks.stacks.length - 1];
+                const stackName = lastStack.StackName || lastStack.stackName;
+                
+                if (confirm(`Delete stack: ${stackName}?`)) {
+                    try {
+                        const response = await fetch(`${API_BASE}/api/stacks/delete/${stackName}`, {
+                            method: 'DELETE'
+                        });
+                        const result = await response.json();
+                        alert(result.message);
+                        setTimeout(loadData, 2000);
+                    } catch (error) {
+                        alert(`Error: ${error.message}`);
+                    }
+                }
+            } else {
+                alert('No stacks to delete');
+            }
+        }
+
+        // Load data on page load
+        loadData();
+        
+        // Refresh every 30 seconds
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>
